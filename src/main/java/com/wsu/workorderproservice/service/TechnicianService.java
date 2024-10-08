@@ -21,21 +21,24 @@ import org.springframework.util.StringUtils;
 
 import static com.wsu.workorderproservice.utilities.CommonUtils.sort;
 
+//@Service annotation is used to mark a class as a service provider that contains business logic
 @Service
+//@RequiredArgsConstructor is a Lombok annotation that generates constructors for all final and non-null fields.
 @RequiredArgsConstructor
+//@Slf4j is a logging annotation for Spring Boot applications that creates a static SLF4J logger instance when applied to a class
 @Slf4j
 public class TechnicianService {
 
     private final TechnicianRepository technicianRepository;
 
     /**
-     * Retrieves a list of all technicians with optional filter parameters.
-     * @param search - allows for type ahead search by technician firstname, lastname, workOrderStatus, or technicianCode.
-     * @param sortField - field used for sorting result. Default value is descending.
-     * @param sortOrder - specifies order for the returned result
-     * @param page - specifies which page number to return
-     * @param rpp - specifies how many results to return per page.
-     * @return - Returns Page<TechnicianDTO> mapped from the Page<Object[]> returned by the database.
+     * This method used to retrieve a page of technicians.
+     * @param search - allows for type ahead search by technician firstname, lastname, workOrderStatus, technicianCode, state, type.
+     * @param sortField - field used for sorting result, default value is technician code.
+     * @param sortOrder - specifies order for the returned result, Default value is descending.
+     * @param page - specifies which page result have to return
+     * @param rpp - specifies how many records have to return on page.
+     * @return - Returns Page<TechnicianDTO> mapped from the Page<Object[]> returned from the database.
      */
     public Page<TechnicianDTO> get(String search, String sortField, String sortOrder, Integer page, Integer rpp) {
         try {
@@ -43,13 +46,18 @@ public class TechnicianService {
             return technicians.map(technician -> TechnicianDTO.builder().code((String)technician[0])
                     .firstName((String)technician[1]).lastName((String)technician[2])
                     .latestWorkOrderStatus((String)technician[3]).type((String) technician[4]).workPermits(workPermits((String)technician[5])).build());
-        } catch (Exception e) {
+        } catch (Exception e) { //Throws database error exception if any exception occurs. We are using ControllerExceptionHandler to handle it.
             log.error("Failed to retrieve technicians. search:{}, sortField:{}, sortOrder:{}, page:{}, rpp:{}, Exception:{}",
                     search, sortField, sortOrder, page, rpp, e);
             throw new DatabaseErrorException("Failed to retrieve technicians", e);
         }
     }
 
+    /**
+     * This method used to convert workPermits comma separated Strings to collection of State
+     * @param workPermits - comma separated Strings
+     * @return - collection of State [We are using Set to keep unique State values]
+     */
     public Set<State> workPermits(String workPermits) {
         if (!StringUtils.hasLength(workPermits)) {
             return null;

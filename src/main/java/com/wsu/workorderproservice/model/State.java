@@ -23,6 +23,7 @@ public class State {
     @Column(name = "state_code")
     private String code;
     @Column(name = "state_name")
+    //@JsonInclude annotation can be used to exclude the properties or fields of a class under certain conditions and it can be defined using the JsonInclude
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String name;
 }
